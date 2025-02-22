@@ -10,9 +10,11 @@ const TaskManege = () => {
   const { user, loading } = useContext(AuthContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
-  const dragItem = useRef();
-  const dragContainer = useRef();
 
+  // References for drag and drop
+  const dragItem = useRef();
+  const dragItemIndex = useRef(null);
+  const dragContainer = useRef();
 
   const { refetch, isLoading } = useQuery({
     queryKey: ["tasks", user?.email],
@@ -25,12 +27,13 @@ const TaskManege = () => {
     },
     enabled: !!user?.email,
   });
+
   if (loading || isLoading) {
     return <span className="loading loading-spinner loading-lg"></span>;
   }
 
   // Handle task addition
-  const handleTaskAdded = async ({ title, description,dueDate, category }) => {
+  const handleTaskAdded = async ({ title, description, dueDate, category }) => {
     if (!user?.email) {
       toast("Please login first");
       return;
@@ -41,7 +44,6 @@ const TaskManege = () => {
       category,
       dueDate,
       userEmail: user.email,
-    
     };
     try {
       const { data } = await axios.post(
@@ -60,9 +62,13 @@ const TaskManege = () => {
 
   // Update task
   const handleupdate = async (id, updatedTask) => {
-    console.log("Updating task:", id, updatedTask);
-    await axios.put(`${import.meta.env.VITE_BASE_URL}/tasks/${id}`, updatedTask);
-    refetch();
+    try {
+      await axios.put(`${import.meta.env.VITE_BASE_URL}/tasks/${id}`, updatedTask);
+      refetch();
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast("Failed to update task");
+    }
   };
 
   // Delete task
@@ -82,12 +88,12 @@ const TaskManege = () => {
     "Done": tasks.filter((task) => task.category === "Done"),
   };
 
-  // Custom drag handlers
-  const handleDragStart = (e, task, container) => {
+  // Custom drag handlers for reordering tasks within a category
+  const handleDragStart = (e, task, container, index) => {
     dragItem.current = task;
     dragContainer.current = container;
+    dragItemIndex.current = index;
     e.target.style.opacity = "0.5";
-    console.log("Dragging:", task, "from", container);
   };
 
   const handleDragEnd = (e) => {
@@ -97,25 +103,37 @@ const TaskManege = () => {
   const handleDragOver = (e) => {
     e.preventDefault();
   };
-
-  // Handler for drop events to update task category
-  const handleDrop = (e, targetContainer) => {
+  const handleDrop = (e, targetContainer, targetIndex) => {
     e.preventDefault();
     const item = dragItem.current;
     const sourceContainer = dragContainer.current;
-  
-    if (sourceContainer !== targetContainer) {
-      // Update local state: update the task's category
+    const sourceIndex = dragItemIndex.current;
+    if (sourceContainer === targetContainer) {
+      const categoryTasks = groupedTasks[targetContainer];
+      const newCategoryTasks = Array.from(categoryTasks);
+      const [removed] = newCategoryTasks.splice(sourceIndex, 1);
+      // Insert the removed item into the new position
+      newCategoryTasks.splice(targetIndex, 0, removed);
+
+      // Update the overall tasks state by merging updated category tasks with other tasks
+      setTasks((prevTasks) => {
+        // Filter out tasks from this category
+        const otherTasks = prevTasks.filter((task) => task.category !== targetContainer);
+        return [...otherTasks, ...newCategoryTasks];
+      });
+
+      // Optionally, update the backend with the new order here.
+      // For example, you could send the newCategoryTasks array to an endpoint to persist the order.
+    } else {
+      // If the task is dropped into a different category, update its category
       setTasks((prevTasks) =>
         prevTasks.map((task) =>
           task._id === item._id ? { ...task, category: targetContainer } : task
         )
       );
-      // Send full updated task object to backend
       handleupdate(item._id, { ...item, category: targetContainer });
     }
   };
-  
 
   return (
     <div className="dark:bg-[#420878] dark:text-white flex-col cards mx-auto p-5 bg-purple-300 min-h-screen">
@@ -142,16 +160,18 @@ const TaskManege = () => {
           <div
             key={category}
             className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md"
-            onDrop={(e) => handleDrop(e, category)}
+            onDrop={(e) => handleDrop(e, category, groupedTasks[category].length)}
             onDragOver={handleDragOver}
           >
             <h2 className="text-lg font-semibold mb-4">{category}</h2>
-            {groupedTasks[category].map((task) => (
+            {groupedTasks[category].map((task, index) => (
               <div
                 key={task._id}
                 draggable
-                onDragStart={(e) => handleDragStart(e, task, category)}
+                onDragStart={(e) => handleDragStart(e, task, category, index)}
                 onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, category, index)}
               >
                 <TaskCard
                   task={task}

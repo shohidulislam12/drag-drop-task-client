@@ -5,8 +5,8 @@ This is a Task Management App that allows users to add, edit, delete, and reorde
 
 ## Live Links
 - **Live App:** [https://emaol-firebase-auth.web.app/](https://emaol-firebase-auth.web.app/)
-- **Backend Repo:** [https://github.com/yourusername/task-management-backend](https://github.com/yourusername/task-management-backend)
-- **Frontend Repo:** [https://github.com/yourusername/task-management-frontend](https://github.com/yourusername/task-management-frontend)
+- **Backend Repo:** [https://github.com/shohidulislam12/drag-drop-task-server](https://github.com/shohidulislam12/drag-drop-task-server)
+- **Frontend Repo:** [https://github.com/shohidulislam12/drag-drop-task-client](https://github.com/shohidulislam12/drag-drop-task-client)
 
 ## Dependencies
 - **Frontend:**

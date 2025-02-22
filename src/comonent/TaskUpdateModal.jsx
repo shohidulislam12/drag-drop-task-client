@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const TaskUpdateModal = ({ isOpen, onClose,handleupdate,task }) => {
   const [title, setTitle] = useState(task.title);
@@ -12,7 +13,12 @@ const TaskUpdateModal = ({ isOpen, onClose,handleupdate,task }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 const updatetaskData={title,description,category,dueDate}
-
+ if(title.length>50){
+      return toast('title cannot maximum 50 letter')
+    }
+    if(description.length>200){
+      return toast('title cannot maximum 200 letter')
+    }
 handleupdate(task._id,updatetaskData);
       setTitle("");
       setDescription("");
@@ -34,7 +40,9 @@ handleupdate(task._id,updatetaskData);
         <h2 className="text-2xl font-bold mb-4 text-center">Add Your Task</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block  text-sm font-medium mb-1">Title:</label>
+            <label className="block  text-sm font-medium mb-1">Title:
+            {title.length>50&&<p className="text-red-300 dark:text-white">title maximum 50 letter</p>}
+            </label>
             <input
               type="text"
               placeholder="Enter  title.(max-50 charecter)"
@@ -45,7 +53,9 @@ handleupdate(task._id,updatetaskData);
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Description:</label>
+            <label className="block text-sm font-medium mb-1">Description:
+            {description.length>200&&<p className="text-red-300 dark:text-white">Description  maximum 200 letter</p>}
+            </label>
             <textarea
               placeholder="Enter task description(max-20 charecter)"
               defaultValue={task.description}
@@ -59,7 +69,7 @@ handleupdate(task._id,updatetaskData);
             type="date" // Add dueDate input
             defaultValue={task.dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="input input-bordered w-full"
+            className="input dark:text-gray-500 input-bordered w-full"
           />
           </div>
           <div>

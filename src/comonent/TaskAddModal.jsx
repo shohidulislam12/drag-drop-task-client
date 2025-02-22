@@ -1,17 +1,24 @@
 
 import axios from "axios";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const TaskAddModal = ({ isOpen, onClose, onTaskAdded }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("To-Do");
 const [dueDate,setDueDate]=useState('')
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if(title.length>50){
+      return toast('title cannot maximum 50 letter')
+    }
+    if(description.length>200){
+      return toast('title cannot maximum 200 letter')
+    }
       onTaskAdded({title,description,category,dueDate});
       setTitle("");
       setDescription("");
@@ -33,7 +40,7 @@ const [dueDate,setDueDate]=useState('')
         <h2 className="text-2xl font-bold mb-4 text-center">Add Your Task</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Title:</label>
+            <label className="block text-sm font-medium mb-1">Title: {title.length>50&&<p className="text-red-300 dark:text-white">title maximum 50 letter</p>}</label>
             <input
               type="text"
               placeholder="Enter title.(max-50 charecter)"
@@ -44,7 +51,8 @@ const [dueDate,setDueDate]=useState('')
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Description:</label>
+            <label className="block text-sm font-medium mb-1">Description:{description.length>200&&<p className="text-red-300 dark:text-white">Description  maximum 200 letter</p>} 
+            </label>
             <textarea
               placeholder="Enter task description(max-20 charecter)"
               value={description}
